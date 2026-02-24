@@ -35,6 +35,7 @@ import androidx.compose.material3.TextButton
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
 import androidx.compose.foundation.layout.heightIn
+import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
@@ -46,28 +47,26 @@ import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import androidx.lifecycle.viewmodel.compose.viewModel
 import coil.compose.rememberAsyncImagePainter
+import com.suradi.movieapplication.ui.viewmodel.AddMovieViewModel
 
 
 @Composable
-fun AddMovieView() {
+fun AddMovieView(
+    modifier: Modifier = Modifier,
+    viewModel: AddMovieViewModel = viewModel()
+) {
 
-    var title by remember { mutableStateOf(value = "") }
-    var description by remember { mutableStateOf(value = "") }
-    var selectedRating by remember { mutableStateOf(value = "4.0") }
-    var genre by remember { mutableStateOf(value = "") }
-    var director by remember { mutableStateOf(value = "") }
-    var releaseYear by remember { mutableStateOf(value = "") }
-    var selectedImageUri by remember { mutableStateOf <Uri?>(value = null) }
+    val movie by viewModel.movie.collectAsState()
 
     var showDialog by remember { mutableStateOf(value = false) }
-    var rating by remember { mutableStateOf(value = 3) }
     val scrollState = rememberScrollState()
 
     val galleryLauncher = rememberLauncherForActivityResult(
         contract = ActivityResultContracts.GetContent()
     )  { uri: Uri? ->
-         selectedImageUri = uri
+         viewModel.onImageSelected(uri)
     }
 
     Column(
@@ -91,9 +90,9 @@ fun AddMovieView() {
                 .clickable { galleryLauncher.launch(input = "image/*") },
             contentAlignment = Alignment.Center
         ) {
-            if (selectedImageUri != null) {
+            if (movie.posterPath.isNotBlank()) {
                 Image(
-                    painter = rememberAsyncImagePainter(model = selectedImageUri),
+                    painter = rememberAsyncImagePainter(model = movie.posterPath),
                     contentDescription = "Selected Image",
                     contentScale = ContentScale.Crop,
                     modifier = Modifier
@@ -106,15 +105,15 @@ fun AddMovieView() {
         }
 
         OutlinedTextField(
-            value = title,
-            onValueChange = { title = it },
+            value = movie.title,
+            onValueChange = viewModel::onTitleChange,
             label = { Text(text = "Title")},
             modifier = Modifier.fillMaxWidth()
         )
 
         OutlinedTextField(
-            value = description,
-            onValueChange = { description = it },
+            value = movie.description,
+            onValueChange = viewModel::onDescriptionChange,
             label = { Text(text = "Description")},
             modifier = Modifier
                 .fillMaxWidth()
@@ -124,22 +123,22 @@ fun AddMovieView() {
         )
 
         OutlinedTextField(
-            value = genre,
-            onValueChange = { genre = it },
+            value = movie.genre,
+            onValueChange = viewModel::onGenreChange,
             label = { Text(text = "Genre")},
             modifier = Modifier.fillMaxWidth()
         )
 
         OutlinedTextField(
-            value = director,
-            onValueChange = { director = it },
+            value = movie.director,
+            onValueChange = viewModel::onDirectorChange,
             label = { Text(text = "Director")},
             modifier = Modifier.fillMaxWidth()
         )
 
         OutlinedTextField(
-            value = releaseYear,
-            onValueChange = { releaseYear = it },
+            value = if (movie.releaseYear == 0) "" else movie.releaseYear.toString(),
+            onValueChange = viewModel::onReleaseYearChange,
             label = { Text(text = "Release Year")},
             modifier = Modifier.fillMaxWidth(),
             keyboardOptions = KeyboardOptions(
@@ -151,9 +150,10 @@ fun AddMovieView() {
         Text(text = "Rating", modifier = Modifier.padding(top = 8.dp))
 
         StarRatingBar(
-            rating = rating, onRatingChange = { rating = it })
-
-        Spacer(modifier = Modifier.height(16.dp))
+            rating = movie.rating.toInt(),
+            onRatingChange = viewModel::onRatingChange
+        )
+            Spacer(modifier = Modifier.height(16.dp))
 
         Button(
             onClick = { showDialog = true }, modifier = Modifier.fillMaxWidth()
@@ -168,12 +168,12 @@ fun AddMovieView() {
             TextButton(onClick = { showDialog = false}) {
                 Text( text = "Close")
             }
-        }, title = { Text(text = title.ifBlank { "Movie Detail"}) }, text = {
+        }, title = { Text(text = movie.title.ifBlank { "Movie Detail"}) }, text = {
             Column(verticalArrangement = Arrangement.spacedBy(8.dp)) {
-                if (selectedImageUri != null) {
+                if (movie.posterPath != null) {
                     Image(
-                        painter = rememberAsyncImagePainter(model = selectedImageUri),
-                        contentDescription = title,
+                        painter = rememberAsyncImagePainter(model = movie.posterPath),
+                        contentDescription = movie.title,
                         contentScale = ContentScale.Crop,
                         modifier = Modifier
                             .fillMaxWidth()
@@ -181,12 +181,12 @@ fun AddMovieView() {
                             .clip(shape = RoundedCornerShape(8.dp))
                     )
                 }
-                Text( text = "Description: $description")
-                Text( text = "Rating: $selectedRating")
-                Text( text = "Genre: $genre")
-                Text( text = "Director: $director")
-                Text( text = "Year: ${releaseYear.ifBlank { "N/A" }}")
-                Text( text = "Description: $description")
+                Text( text = "Description: ${movie.description}")
+                Text( text = "Rating: ${movie.rating}")
+                Text( text = "Genre: ${movie.genre}")
+                Text( text = "Director: ${movie.director}")
+                Text( text = "Year: ${movie.releaseYear}")
+                Text( text = "Description: $movie.description")
             }
         })
     }

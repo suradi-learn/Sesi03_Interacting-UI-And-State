@@ -12,12 +12,14 @@ import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.Favorite
 import androidx.compose.material.icons.filled.Star
 import androidx.compose.material3.Card
 import androidx.compose.material3.CardDefaults
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
 import androidx.compose.material3.Icon
+import androidx.compose.material3.IconButton
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
@@ -31,9 +33,13 @@ import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import com.suradi.movieapplication.ui.model.DummyMovieData
 import com.suradi.movieapplication.ui.model.Movie
+import kotlinx.serialization.internal.MapLikeSerializer
 
 @Composable
-fun MovieCard(movie: Movie, modifier: Modifier = Modifier) {
+fun MovieCard(
+    movie: Movie,
+    onToggleLike: () -> Unit = {},
+    modifier: Modifier = Modifier) {
     Card(
         modifier = modifier
             .fillMaxWidth()
@@ -67,12 +73,27 @@ fun MovieCard(movie: Movie, modifier: Modifier = Modifier) {
                     .align(Alignment.CenterVertically)
 
             ) {
-                Text(
-                    text = movie.title,
-                    style = MaterialTheme.typography.titleMedium.copy(fontWeight = FontWeight.Bold),
-                    maxLines =2,
-                    overflow = TextOverflow.Ellipsis
-                )
+                Row (
+                    modifier = Modifier.fillMaxWidth(),
+                    verticalAlignment = Alignment.CenterVertically
+                ) {
+                    Text(
+                        text = movie.title,
+                        style = MaterialTheme.typography.titleMedium.copy(fontWeight = FontWeight.Bold),
+                        maxLines = 2,
+                        overflow = TextOverflow.Ellipsis,
+                        modifier = Modifier.weight(1f)
+                    )
+
+                    IconButton(onClick = onToggleLike) {
+                        Icon(
+                            imageVector = Icons.Filled.Favorite,
+                            contentDescription = if (movie.isLiked) "Unlike" else "Like",
+                            tint = if (movie.isLiked) Color(color = 0xFFFF4081) else Color.Gray // pink vs gray
+                        )
+                    }
+
+                }
 
                 Text(
                     text = "${movie.genre} . ${movie.releaseYear}",

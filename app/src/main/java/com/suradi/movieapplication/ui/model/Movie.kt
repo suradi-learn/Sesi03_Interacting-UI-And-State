@@ -8,5 +8,8 @@ data class Movie (
     val director: String,
     val releaseYear: Int,
     val posterPath: String = "",
-    val posterResId: Int = 0
+    val posterResId: Int = 0,
+    val id: Int = -1,
+    val isLiked: Boolean = false
+
 )
