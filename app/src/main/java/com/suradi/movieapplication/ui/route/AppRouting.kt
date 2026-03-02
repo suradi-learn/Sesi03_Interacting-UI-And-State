@@ -1,0 +1,157 @@
+package com.suradi.movieapplication.ui.route
+
+import androidx.compose.foundation.layout.padding
+import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.automirrored.filled.ArrowBack
+import androidx.compose.material.icons.filled.AddCircle
+import androidx.compose.material.icons.filled.Home
+import androidx.compose.material3.ExperimentalMaterial3Api
+import androidx.compose.material3.Icon
+import androidx.compose.material3.IconButton
+import androidx.compose.material3.NavigationBar
+import androidx.compose.material3.Text
+import androidx.compose.material3.TopAppBar
+import androidx.compose.runtime.Composable
+import androidx.compose.ui.Modifier
+import androidx.compose.ui.graphics.vector.ImageVector
+import androidx.compose.material3.NavigationBarItem
+import androidx.compose.material3.Scaffold
+import androidx.compose.runtime.getValue
+import androidx.compose.ui.tooling.preview.Preview
+import androidx.navigation.NavDestination
+import androidx.navigation.NavDestination.Companion.hierarchy
+import androidx.navigation.NavGraph.Companion.findStartDestination
+import androidx.navigation.NavHostController
+import androidx.navigation.compose.NavHost
+import androidx.navigation.compose.composable
+import androidx.navigation.compose.currentBackStackEntryAsState
+import androidx.navigation.compose.rememberNavController
+import com.suradi.movieapplication.ui.view.AddMovieView
+import com.suradi.movieapplication.ui.view.LoginView
+import com.suradi.movieapplication.ui.view.MovieDetailView
+import com.suradi.movieapplication.ui.view.MovieListView
+import com.suradi.movieapplication.ui.view.RegisterView
+
+enum class AppView(val title: String, val icon: ImageVector? = null) {
+    AddMovie( title = "Add Movie", Icons.Filled.AddCircle),
+    Login( title = "Login"),
+    MovieDetail( title = "Movie Detail"),
+    MovieList( title = "Movie List", Icons.Filled.Home),
+    Register( title = "Register")
+}
+
+data class BottomNavItem(val view: AppView, val label: String)
+
+@OptIn(ExperimentalMaterial3Api::class)
+@Composable
+fun MyTopAppBar(
+    currentView: AppView?,
+    canNavigateBack: Boolean,
+    navigateUp: () -> Unit,
+    modifier: Modifier = Modifier
+) {
+    TopAppBar(
+        title = {
+            Text(text = currentView?.title ?: AppView.MovieList.title)
+        },
+        modifier = modifier,
+        navigationIcon = {
+            if (canNavigateBack) {
+                IconButton(onClick = navigateUp) {
+                    Icon(
+                        imageVector = Icons.AutoMirrored.Filled.ArrowBack,
+                        contentDescription = "Back"
+                    )
+                }
+            }
+        }
+    )
+}
+
+@Composable
+fun MyBottomNavigationBar(
+    navController: NavHostController,
+    currentDestination: NavDestination?,
+    items: List<BottomNavItem>
+) {
+    if (items.any { it.view.name == currentDestination?.route }) {
+        NavigationBar {
+            items.forEach { item ->
+                NavigationBarItem(
+                    icon = { Icon(imageVector = item.view.icon!!, contentDescription = item.label) },
+                    label = { Text(text = item.label) },
+                    selected = currentDestination?.hierarchy?.any { it.route == item.view.name } == true,
+                    onClick = {
+                        navController.navigate(route = item.view.name) {
+                            popUpTo(id = navController.graph.findStartDestination().id) {
+                                saveState = true
+                            }
+                            launchSingleTop = true
+                            restoreState = true
+                        }
+                    }
+                )
+            }
+        }
+    }
+}
+
+@Composable
+@Preview(showSystemUi = true, showBackground = true )
+fun AppRouting() {
+
+    val navController = rememberNavController()
+    val navBackStackEntry by navController.currentBackStackEntryAsState()
+    val currentDestination = navBackStackEntry?.destination
+    val currentRoute = currentDestination?.route
+    val currentView = AppView.entries.find { it.name ==currentRoute }
+
+    val bottomNavItems = listOf(
+        BottomNavItem( view = AppView.MovieList, label = "Movies"),
+        BottomNavItem( view = AppView.AddMovie, label = "Add")
+    )
+
+    Scaffold(
+        topBar = {
+            MyTopAppBar(
+                currentView = currentView,
+                canNavigateBack = navController.previousBackStackEntry != null,
+                navigateUp = { navController.navigateUp()}
+            )
+        },
+        bottomBar = {
+            MyBottomNavigationBar(
+                navController = navController,
+                currentDestination = currentDestination,
+                items = bottomNavItems
+            )
+        }
+    ) { innerPadding ->
+        NavHost(
+            modifier = Modifier.padding(paddingValues = innerPadding),
+            navController = navController,
+            startDestination = AppView.MovieList.name
+        ){
+            composable(route = AppView.MovieList.name) {
+                MovieListView(navController = navController)
+
+            }
+
+            composable(route = AppView.AddMovie.name) {
+                AddMovieView()
+            }
+
+            composable(route = AppView.Login.name) {
+                LoginView()
+            }
+
+            composable(route = AppView.Register.name) {
+                RegisterView()
+            }
+
+            composable(route = AppView.MovieDetail.name + "/{title}") { backStackEntry ->
+                MovieDetailView( title = backStackEntry.arguments?.getString( "title")!!)
+            }
+        }
+    }
+}

@@ -44,6 +44,18 @@ class AddMovieViewModel: ViewModel() {
         val current = _movie.value
         val newMovie = current.copy()
 
+        _movie.value = Movie(
+            id = -1,
+            title = "",
+            description = "",
+            rating = 3.0,
+            genre = "",
+            director = "",
+            releaseYear = 0,
+            posterPath = ""
+
+        )
+
         DummyMovieData.movies.add(newMovie)
     }
 }

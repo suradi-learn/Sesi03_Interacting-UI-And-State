@@ -39,14 +39,15 @@ import kotlinx.serialization.internal.MapLikeSerializer
 fun MovieCard(
     movie: Movie,
     onToggleLike: () -> Unit = {},
+    onCardClick: () -> Unit = {},
     modifier: Modifier = Modifier) {
     Card(
         modifier = modifier
             .fillMaxWidth()
             .padding(8.dp),
         shape = RoundedCornerShape(16.dp),
-        elevation = CardDefaults.cardElevation(defaultElevation = 6.dp)
-
+        elevation = CardDefaults.cardElevation(defaultElevation = 6.dp),
+        onClick = onCardClick
     ) {
         Row(
             modifier = Modifier

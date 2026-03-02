@@ -15,11 +15,15 @@ import com.suradi.movieapplication.ui.model.Movie
 import com.suradi.movieapplication.ui.viewmodel.MovieListViewModel
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.key
+import androidx.navigation.NavController
+import androidx.navigation.compose.rememberNavController
+import com.suradi.movieapplication.ui.route.AppView
 
 @Composable
 fun MovieListView(
     viewModel: MovieListViewModel = viewModel(),
-    modifier: Modifier = Modifier
+    modifier: Modifier = Modifier,
+    navController: NavController = rememberNavController()
 ) {
     val movies by viewModel.movies.collectAsState()
 
@@ -28,7 +32,11 @@ fun MovieListView(
         contentPadding = PaddingValues(4.dp)
     ) {
         items (movies, key = {it.title}) { movie ->
-            MovieCard(movie = movie, onToggleLike = {viewModel.toggleIsLiked(movie)})
+            MovieCard(
+                movie = movie,
+                onToggleLike = {viewModel.toggleIsLiked(movie)},
+                onCardClick = {navController.navigate( route = "${AppView.MovieDetail.name}/${movie.title}")}
+            )
         }
     }
 }
